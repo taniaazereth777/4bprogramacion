@@ -57,10 +57,10 @@
     <body> 
         <style>
             :root{
-                --color-primario: #326273;
-                --color-secundario: #235410;
-                --color-terciario:#f2f3ae;
-                --color-cuarto:#f4d527;
+                --color-primario: #733232;
+                --color-secundario: #18866c;
+                --color-terciario:#fefed5;
+                --color-cuarto:#33e692;
                 --color-quinto: #223;
             }
             *{
@@ -141,61 +141,70 @@
                 overflow-y: auto;
                 transition: transform 0.3s ease-in;
             }
-            .personaje:hover .descripcion{
+            .personaje:hover .overview{
                 transform: translateY(0);
             }
         </style>
         <header>
             <form id="form">
-                <img src="logo.jpg" alt="logo" style="width: 100px";>
             <input type="text" id="search" class="search" placeholder="Buscar personaje">
             </form>
         </header>
         <main id="main"></main>
         <script>
-        const API_URL = 'https://dragonball-api.com/api/characters';
-    
+        const API_URL = 'https://hp-api.onrender.com/api/characters';
+        const API_URL1 = 'https://rickandmortyapi.com/api/character';
+
         const main = document.getElementById('main');
         const form = document.getElementById('form');
         const search = document.getElementById('search');
             
-        getCharacters(API_URL)
-            async function getCharacters(url) {
+        let allCharacters = [];
+
+        getCharacters(API_URL);
+        getCharacters(API_URL1);
+
+        async function getCharacters(url) {
             const res = await fetch(url);
             const data = await res.json();
-            showCharacters(data.items || data);
+            if (Array.isArray(data)) {
+                allCharacters = allCharacters.concat(data);
+            } else if (Array.isArray(data.results)) {
+                allCharacters = allCharacters.concat(data.results);
+            }
+            showCharacters(allCharacters);
         }
+
         function showCharacters(characters){
             main.innerHTML = '';
             characters.forEach(char => {
-                const {name, image, ki, maxKi, description, id, race} = char;
+                const {name, image, race, description} = char;
                 const charElement = document.createElement('div');
                 charElement.classList.add('personaje');
                 charElement.innerHTML = `
-                <img src ="${image}" alt = "${name}">
-                <div class ="personaje-info">
-                    <h1>${id} </h1>   <h3>${name}</h3>
-                <br>
-                ${race}
+                <img src="${image}" alt="${name}">
+                <div class="personaje-info">
+                    <h1></h1>   <h3>${name || 'Desconocido'}</h3>
+                    <br>
+                    ${race || 'Desconocida'}
                 </div>
-                <div class = "descripcion">
+                <div class="descripcion">
                     <h3>Descripcion</h3>
-                    ${description}
-                    <p><strong>Ki:</strong> ${ki}</p>
-                    <p><strong>Max Ki:</strong> ${maxKi}</p>
-                    <p>${description || "Sin descripcion disponible"}</p>
-                    </div>`
+                    ${description || 'Sin descripción'}
+                </div>`
                 main.appendChild(charElement);
-        })}
+            });
+        }
 
         form.addEventListener('submit', (e) => {
-            e.preventDefault()
+            e.preventDefault();
             const searchTerm = search.value.toLowerCase();
-            if(searchTerm && searchTerm !== ''){
-            getCharacters(API_URL + `?name=${searchTerm}`)
+            if (searchTerm && searchTerm !== '') {
+                const filtered = allCharacters.filter(c => c.name && c.name.toLowerCase().includes(searchTerm));
+                showCharacters(filtered);
                 search.value = '';
             } else {
-                window.location.reload();
+                showCharacters(allCharacters);
             }
         })
         </script>
